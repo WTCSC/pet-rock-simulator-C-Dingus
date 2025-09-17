@@ -1,18 +1,35 @@
+#used to check file system
 import os
+
+#quit the program
 import sys
 
+#i stole this idea from dexter
+import time
+
+def spell(string):
+    for i in string:
+        print(i, end = "", flush = True)
+        time.sleep(0.02)
+
+#read the save
 def read_save():
+    #set base dict to be filled
     stats = {}
+
+    #open save
     with open("save.rock", "r") as file:
-        print(file.read())
+        #split it into lines
         lines = file.read().split('\n');
+
         for line in lines:
+            #crunch the lines into the dict
             match line.split(':')[0]:
                 case "name":
                     stats["name"] = line.split(':')[1]
                 case "food":
                     stats["food"] = int(line.split(':')[1])
-                case "happiness":
+                case "happy":
                     stats["happy"] = int(line.split(':')[1])
                 case "diet":
                     buf = line.split('[')[1].split(']')[0].split(',')
@@ -21,42 +38,59 @@ def read_save():
                     buf = line.split('[')[1].split(']')[0].split(',')
                     stats["mind"] = [int(buf[0]), int(buf[1])]
 
-    print(f"{stats}")
+    #return the dict
     return stats
 
+#push the rock stats dict into a file that read_save can read
 def save_game(data):
     save = ""
+
     for key, val in data.items():
+        #formating
         save += str(key)
         save += ":"
         save += str(val)
         save += "\n"
-    
+
+    #write the file
     with open("save.rock", "w") as file:
         file.write(save)
 
-
+#run the game
 def run():
+    #read the save data
     save = read_save()
+
+    #start of the game loop
     while True:
+        #calculate health every round if it goes bellow 1 then the game is over
         health = 5
+
+        #set the start message that tells the user how their pet rock is
         start_msg = f"{save['name']} is\n"
+
+        #crunch all the data for the start message
         if save['food'] <= 3:
             start_msg += "Hungry\n"
+
             if 'mind' in save:
                 save['mind'][1] -= 3
                 save['mind'][0] -= 4
+
         if save['food'] <= 0:
             health = 0
+
         if save['happy'] <= 3:
             start_msg += "Bored\n"
             if 'mind' in save:
                 save['mind'][1] -= 4
+
         if save['happy'] <= 0:
             if 'mind' in save:
                 save['mind'][1] -= 10
             else:
                 health = 0
+
         if 'mind' in save:
             calm = save['mind'][0]
             joy = save['mind'][1]
@@ -80,6 +114,7 @@ def run():
                         start_msg += "Furious\n"
                     else:
                         start_msg += "Angry\n"
+
         if 'diet' in save:
             mean = int((save['diet'][0] + save['diet'][1] + save['diet'][2])/3)
             ballance = 0;
@@ -101,84 +136,148 @@ def run():
             else:
                 start_msg += "Healthy\n"
 
+        #end the game
         if health <= 0:
-            print("Dead")
+            spell("Dead")
             break
-        print(start_msg)
 
+        #tell the player the information they can get about their rock
+        spell(start_msg)
 
+        #get what the player wants to do
         while True:
-            choice = input(f"what do you do?\n-(Feed) {save['name']}\n-(Play) with {save['name']}\n-Save and (Quit)\n>>")
+            spell(f"what do you do?\n-(Feed) {save['name']}\n-(Play) with {save['name']}\n-Save and (Quit)\n>>")
+            choice = input()
 
             if choice.lower() == "play":
-                print("play")
+                spell("play")
                 break
             elif choice.lower() == "feed":
-                save['food'] += 100
-                print("kibble")
+                
+                #if the player has the diet challange enables
+                if 'diet' in save:
+                    spell(f"\n what do you wish to feed {save['name']} S(s), .*.(dots), //(bars)")
+                    food = input()
+                    match food.lower():
+                        case "s":
+                            spell(f"you feed {save['name']} some protein rich food (S)")
+                            save['diet'][0] += 1
+                            save['food'] += 1
+
+                            #if the rock has emotions
+                            if 'mind' in save:
+                                save['mind'][0] + 2
+                        case "dots":
+                            spell(f"you feed {save['name']} some carbohydrate rich food (.*.)")
+                            save['diet'][1] += 1
+                            save['food'] += 2
+
+                            if 'mind' in save:
+                                save['mind'][0] -= 2
+                                save['mind'][1] += 3
+                        case "bars":
+                            spell(f"you feed {save['name']} some fatty food (//)")
+                            save['diet'][2] += 1
+                            save['food'] += 3
+
+                            if 'mind' in save:
+                                save['mind'][0] -= 1
+                                save['mind'][1] -= 2
+                        case _:
+                            spell(f"you did not feed {save['name']}")
+                            if 'mind' in save:
+                                save['mind'][0] -= 2
+                                save['mind'][1] -= 3
+                else:
+                    spell(f"you feed {save['name']}")
+                    save['food'] += 2
+
                 break
+
             elif choice.lower() == "quit":
+                #save and quit the game
                 with open("test.rock", "w") as file:
                     save_game(save)
                     sys.exit(0)
             else:
-                print("incorrect input")
+                spell("unrecognized input")
+
+        #end of round
 
 
 
-
+#used to initiate a new save 
 def start(challanges, name):
+    #make save file
     with open("save.rock", "w") as file:
-        contents = f"name:{name}\nfood:5\nhappiness:5\n"
+        contents = f"name:{name}\nfood:5\nhappy:5\n"
+        #read the input challanges
         if "diet" in challanges:
             contents += "diet:[5, 5, 5]\n"
         if "mind" in challanges:
             contents += "mind:[5, 5]\n"
         file.write(contents)
-
+    #start the game loop
     run();
 
 
 
-
+#if a save exists
 if os.path.exists("save.rock"):
+    #get user input to start new or continue or quit
     while True:
-        i = input("start/(cont)inue/quit\n>>")
+        spell("(Start)/(Cont)inue/Quit\n")
+        i = input(">>")
         if i == "start":
+            #ask if the player would like to play some of the challanges
             challanges = []
-            i = input("add challanges?(y/n)\n>>")
+            spell("add challenges?(y/n)\n>>")
+            i = input()
             if i == "y":
                 while True:
-                    challange = input("challange name or (exit)\n>>")
+                    #read challanges
+                    spell("challenge name or (exit)\n>>")
+                    challange = input()
                     if challange == "exit":
                         break
                     challanges.append(challange)
-            name = input("Name of your new pet rock:\n>>")
+            name = spell("Name of your new pet rock:\n>>")
+            name = input()
+            #start
             start(challanges, name)
             break
         elif i == "cont":
+            #continue from save
             run()
             break
         elif i == "quit":
+            #leave
             break
         else:
-            print("invalid input")
+            spell("invalid input")
 else:
-    i = input("start/quit\n>>")
+    spell("start/quit\n>>")
+    i = input()
     while True:
+        #start
         if i == "start":
             challanges = []
-            i = input("add challanges?(y/n)\n>>")
+            #impliment challanges
+            spell("add challenges?(y/n)\n>>")
+            i = input()
             if i == "y":
                 while True:
-                    challange = input("challange name or (exit)\n>>")
+                    spell("challenge name or (exit)\n>>")
+                    challange = input()
                     if challange == "exit":
                         break
                 challanges.append(challange)
-            name = input("Name of your new pet rock:\n>>")
+            spell("Name of your new pet rock:\n>>")
+            name = input()
             start(challanges, name)
         elif i == "quit":
+            #leave
             break
         else:
-            print("invalid input")
+            spell("invalid input")
 
