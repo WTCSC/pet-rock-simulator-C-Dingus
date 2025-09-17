@@ -1,8 +1,10 @@
 import os
+import sys
 
 def read_save():
     stats = {}
     with open("save.rock", "r") as file:
+        print(file.read())
         lines = file.read().split('\n');
         for line in lines:
             match line.split(':')[0]:
@@ -18,17 +20,43 @@ def read_save():
                 case "mind":
                     buf = line.split('[')[1].split(']')[0].split(',')
                     stats["mind"] = [int(buf[0]), int(buf[1])]
+
+    print(f"{stats}")
     return stats
+
+def save_game(data):
+    save = ""
+    for key, val in data.items():
+        save += str(key)
+        save += ":"
+        save += str(val)
+        save += "\n"
+    
+    with open("save.rock", "w") as file:
+        file.write(save)
 
 
 def run():
     save = read_save()
     while True:
+        health = 5
         start_msg = f"{save['name']} is\n"
         if save['food'] <= 3:
             start_msg += "Hungry\n"
+            if 'mind' in save:
+                save['mind'][1] -= 3
+                save['mind'][0] -= 4
+        if save['food'] <= 0:
+            health = 0
         if save['happy'] <= 3:
             start_msg += "Bored\n"
+            if 'mind' in save:
+                save['mind'][1] -= 4
+        if save['happy'] <= 0:
+            if 'mind' in save:
+                save['mind'][1] -= 10
+            else:
+                health = 0
         if 'mind' in save:
             calm = save['mind'][0]
             joy = save['mind'][1]
@@ -64,13 +92,37 @@ def run():
 
             if ballance > 5:
                 start_msg += "Sick\n"
-            elif ballance > 5:
+                if 'mind' in save:
+                    save['mind'][1] -= 10
+            elif ballance > 2:
                 start_msg += "Queasy\n"
+                if 'mind' in save:
+                    save['mind'][1] -= 5
             else:
                 start_msg += "Healthy\n"
 
-        input(start_msg)
-        
+        if health <= 0:
+            print("Dead")
+            break
+        print(start_msg)
+
+
+        while True:
+            choice = input(f"what do you do?\n-(Feed) {save['name']}\n-(Play) with {save['name']}\n-Save and (Quit)\n>>")
+
+            if choice.lower() == "play":
+                print("play")
+                break
+            elif choice.lower() == "feed":
+                save['food'] += 100
+                print("kibble")
+                break
+            elif choice.lower() == "quit":
+                with open("test.rock", "w") as file:
+                    save_game(save)
+                    sys.exit(0)
+            else:
+                print("incorrect input")
 
 
 
