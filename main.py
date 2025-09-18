@@ -12,6 +12,12 @@ def spell(string):
         print(i, end = "", flush = True)
         time.sleep(0.02)
 
+def rock(emotion):
+    with open("face.rock") as file:
+        print(file.read().lstrip().split("%" + emotion + "%")[1])
+    return None
+
+
 #read the save
 def read_save():
     #set base dict to be filled
@@ -37,6 +43,8 @@ def read_save():
                 case "mind":
                     buf = line.split('[')[1].split(']')[0].split(',')
                     stats["mind"] = [int(buf[0]), int(buf[1])]
+                case "egg":
+                    stats["egg"] = "egg"
 
     #return the dict
     return stats
@@ -97,23 +105,23 @@ def run():
             
             if calm > 0:
                 if joy > 5 and calm > 5:
-                    start_msg += "Euphoric\n"
+                    rock("euphoric")
                 elif joy > 0:
-                    start_msg += "Happy\n"
+                    rock("happy")
                 elif joy > -5:
-                    start_msg += "Sad\n"
+                    rock("sad")
                 else:
-                    start_msg += "Depressed\n"
+                    rock("depressed")
             else:
                 if joy < -5 and calm < -5:
-                    start_msg += "Psychopathic\n"
+                    rock("psychopathic")
                 elif joy < 0:
-                    start_msg += "Apathetic\n"
+                    rock("apathetic")
                 else:
                     if calm < -5:
-                        start_msg += "Furious\n"
+                        rock("furious")
                     else:
-                        start_msg += "Angry\n"
+                        rock("angry")
 
         if 'diet' in save:
             mean = int((save['diet'][0] + save['diet'][1] + save['diet'][2])/3)
@@ -146,17 +154,46 @@ def run():
 
         #get what the player wants to do
         while True:
-            spell(f"what do you do?\n-(Feed) {save['name']}\n-(Play) with {save['name']}\n-Save and (Quit)\n>>")
+            spell(f"\nWhat do you do?\n-(Feed) {save['name']}\n-(Play) with {save['name']}\n-Save and (Quit)\n>>")
             choice = input()
 
             if choice.lower() == "play":
-                spell("play")
-                break
+                spell(f"How would you like to play with {save['name']}\n-(Throw) him at pedestrians\n-(Pet) him\n-Bring him on a (run) \n>>")
+                choice = input()
+
+                match choice.lower():
+                    case "throw":
+                        spell(f"you throw {save['name']} at a few pedestrians")
+                        save['happy'] += 4
+                        if 'mind' in save:
+                            save['mind'][0] -= 3
+                            save['mind'][1] -= 3
+                    case "pet":
+                        spell(f"you pet {save['name']} ")
+                        save['happy'] += 2
+                        if 'mind' in save:
+                            save['mind'][0] += 2
+                            save['mind'][1] += 1
+
+                    case "run":
+                        spell(f"you take {save['name']} on a run for some reason")
+                        save['happy'] += 1
+                        if 'mind' in save:
+                            save['mind'][0] += 4
+                            save['mind'][1] -= 1
+
+                    case "chuck":
+                        spell(f"You found a seceret :D, anyways you chuck {save['name']} at oncoming traffic")
+                        save['happy'] += 24
+                        if 'mind' in save:
+                            save['mind'][0] -= 20
+                            save['mind'][1] -= 20
+                
             elif choice.lower() == "feed":
                 
                 #if the player has the diet challange enables
                 if 'diet' in save:
-                    spell(f"\n what do you wish to feed {save['name']} S(s), .*.(dots), //(bars)")
+                    spell(f"\n what do you wish to feed {save['name']} \n-S(s), \n-.*.(dots), \n-//(bars) \n>>")
                     food = input()
                     match food.lower():
                         case "s":
@@ -203,7 +240,17 @@ def run():
                 spell("unrecognized input")
 
         #end of round
+        save['happy'] -= 2
+        save['food'] -= 2
 
+        if 'diet' in save:
+            save['diet'] -= [2, 2, 2]
+
+        if 'mind' in save:
+            save['mind'] += [1, 1]
+
+        if 'egg' in save:
+            save['egg'] += "egg"
 
 
 #used to initiate a new save 
@@ -216,6 +263,9 @@ def start(challanges, name):
             contents += "diet:[5, 5, 5]\n"
         if "mind" in challanges:
             contents += "mind:[5, 5]\n"
+        if "egg" in challanges:
+            spell("you found an egg")
+            contents += "egg:egg\n"
         file.write(contents)
     #start the game loop
     run();
