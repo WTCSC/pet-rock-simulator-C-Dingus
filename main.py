@@ -72,7 +72,7 @@ def run():
     #start of the game loop
     while True:
         #calculate health every round if it goes bellow 1 then the game is over
-        health = 5
+        health = 7
 
         #set the start message that tells the user how their pet rock is
         start_msg = f"{save['name']} is\n"
@@ -106,22 +106,30 @@ def run():
             if calm > 0:
                 if joy > 5 and calm > 5:
                     rock("euphoric")
+                    health += 3;
                 elif joy > 0:
                     rock("happy")
+                    health += 1;
                 elif joy > -5:
                     rock("sad")
+                    health -= 1;
                 else:
                     rock("depressed")
+                    health -= 3;
             else:
                 if joy < -5 and calm < -5:
                     rock("psychopathic")
+                    health -= 6
                 elif joy < 0:
                     rock("apathetic")
+                    health -= 3
                 else:
                     if calm < -5:
                         rock("furious")
+                        health -= 2
                     else:
                         rock("angry")
+                        health -= 1
 
         if 'diet' in save:
             mean = int((save['diet'][0] + save['diet'][1] + save['diet'][2])/3)
@@ -137,16 +145,19 @@ def run():
                 start_msg += "Sick\n"
                 if 'mind' in save:
                     save['mind'][1] -= 10
+                health -= 4;
             elif ballance > 2:
                 start_msg += "Queasy\n"
                 if 'mind' in save:
                     save['mind'][1] -= 5
+                health -= 2
             else:
                 start_msg += "Healthy\n"
+                health += 4
 
         #end the game
         if health <= 0:
-            spell("Dead")
+            spell("Your pet rock has died due to your neglect i hope your happy")
             break
 
         #tell the player the information they can get about their rock
