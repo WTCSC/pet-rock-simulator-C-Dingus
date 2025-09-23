@@ -16,3 +16,4 @@ Just follow the instructions given by the program and if you want to play with c
 - diet
   + The rock needs a balanced diet
 
+###### yea i dont know why face.rock isnt in the repo
